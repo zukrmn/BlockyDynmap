@@ -9,12 +9,11 @@ import org.dynmap.markers.MarkerAPI;
 import org.dynmap.markers.MarkerSet;
 import org.bukkit.plugin.Plugin;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
-/**
- * Gerencia toda integração com o Dynmap para visualização de claims
- * e suas cores vinculadas a facções. Corrigido para formato HTML.
- */
 public class DynmapManager {
     private static final String MARKER_SET_ID = "blockyclaim.markers";
     private static final String MARKER_SET_LABEL = "Territórios (BlockyClaim)";
@@ -22,7 +21,6 @@ public class DynmapManager {
     private static final double FILL_OPACITY = 0.3;
     private static final double LINE_OPACITY = 0.8;
     private static final int LINE_WEIGHT = 3;
-
     private final BlockyDynmap plugin;
     private MarkerAPI markerApi;
     private MarkerSet markerSet;
@@ -46,42 +44,40 @@ public class DynmapManager {
         }
     }
 
-    /**
-     * Cria ou atualiza o marcador de um Claim no Dynmap, usando cor e tags da facção do dono.
-     * Usa HTML para destaque (negrito), ao invés de markdown/asterisco.
-     */
+    // NOVO: Sincroniza markers, removendo todos que não existem mais e criando apenas os de claims válidas
+    public void syncMarkers(List<Claim> claims) {
+        Set<String> currentIds = new HashSet<String>();
+        for (Claim claim : claims) {
+            String id = generateMarkerId(claim);
+            currentIds.add(id);
+            createOrUpdateClaimMarker(claim); // (já lida com update/recriação)
+        }
+        // Remove markers "fantasmas"
+        for (AreaMarker marker : markerSet.getAreaMarkers()) {
+            if (!currentIds.contains(marker.getMarkerID())) {
+                marker.deleteMarker();
+            }
+        }
+    }
+
     public void createOrUpdateClaimMarker(Claim claim) {
         if (markerSet == null || claim == null) return;
-
         String markerId = generateMarkerId(claim);
         String worldName = claim.getWorldName();
-
         AreaMarker existingMarker = markerSet.findAreaMarker(markerId);
         if (existingMarker != null) {
             existingMarker.deleteMarker();
         }
-
-        // Define as coordenadas do terreno
         double[] xCorners = { claim.getMinX(), claim.getMaxX() + 1 };
         double[] zCorners = { claim.getMinZ(), claim.getMaxZ() + 1 };
-
-        // Cria o novo marcador
         AreaMarker marker = markerSet.createAreaMarker(markerId, "", false, worldName, xCorners, zCorners, false);
         if (marker == null) {
             System.out.println("[BlockyDynmap] Erro: Nao foi possivel criar o marcador para o claim: " + claim.getClaimName());
             return;
         }
-
         String ownerName = claim.getOwnerName();
         Faction ownerFaction = plugin.getBlockyFactions().getFactionManager().getPlayerFaction(ownerName);
-
-        // ADIÇÃO: log de debug extra para identificar problemas de sincronização
-        if (ownerFaction == null) {
-            System.out.println("[BlockyDynmap] AVISO: claim '" + claim.getClaimName() + "' criado por '" + ownerName + "' sem facção detectada no momento da atualização do dynmap.");
-        }
-
-        String color;
-        String label;
+        String color, label;
         if (ownerFaction != null) {
             color = ownerFaction.getColorHex();
             label = "§f" + claim.getClaimName() + " §7(" + ownerFaction.getTag() + ")";
@@ -89,36 +85,23 @@ public class DynmapManager {
             color = DEFAULT_COLOR;
             label = "§f" + claim.getClaimName();
         }
-
-        // *** CORRIGIDO PARA HTML ***
         StringBuilder description = new StringBuilder();
         description.append("<b>Dono:</b> ").append(ownerName);
         if (ownerFaction != null) {
-            description.append("<br><b>Faccao:</b> ").append(ownerFaction.getName());
+            description.append("<br/><b>Facção:</b> ").append(ownerFaction.getName());
         }
-
         marker.setLabel(label, true);
         marker.setDescription(description.toString());
         int colorInt = Integer.parseInt(color.substring(1), 16);
         marker.setLineStyle(LINE_WEIGHT, LINE_OPACITY, colorInt);
         marker.setFillStyle(FILL_OPACITY, colorInt);
-        // Se precisar, adicione outros ajustes ou refresh explícito
-    }
-
-    public void deleteClaimMarker(Claim claim) {
-        if (markerSet == null || claim == null) return;
-        String markerId = generateMarkerId(claim);
-        AreaMarker marker = markerSet.findAreaMarker(markerId);
-        if (marker != null) {
-            marker.deleteMarker();
-        }
-    }
-
-    private String generateMarkerId(Claim claim) {
-        return "claim_" + claim.getOwnerName().toLowerCase(Locale.ROOT) + "_" + claim.getClaimName();
     }
 
     public void cleanup() {
         // Limpeza customizada se necessário
+    }
+
+    private String generateMarkerId(Claim claim) {
+        return "claim_" + claim.getOwnerName().toLowerCase(Locale.ROOT) + "_" + claim.getClaimName();
     }
 }

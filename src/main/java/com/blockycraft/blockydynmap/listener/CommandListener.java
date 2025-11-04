@@ -1,20 +1,14 @@
 package com.blockycraft.blockydynmap.listener;
 
-import com.blockycraft.blockyclaim.data.Claim;
 import com.blockycraft.blockydynmap.BlockyDynmap;
-import com.blockycraft.blockyfactions.data.Faction;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * Listener para processamento de comandos relacionados a Claim e Factions,
- * garantindo que a integração com o Dynmap seja sempre fiel ao estado atual.
+ * Listener para comandos relevantes do BlockyClaim e BlockyFactions,
+ * realizando ressincronização completa do Dynmap sempre que possível alteração.
  */
 public class CommandListener implements Listener {
     private final BlockyDynmap plugin;
@@ -28,91 +22,18 @@ public class CommandListener implements Listener {
         if (event.isCancelled()) {
             return;
         }
-        Player player = event.getPlayer();
         String[] args = event.getMessage().toLowerCase().split(" ");
         String command = args[0].replace("/", "");
 
-        // Captura o estado da facção ANTES da mudança
-        handleCommand(command, args, player);
-    }
-
-    private void handleCommand(String command, String[] args, Player player) {
-        // Gatilhos do BlockyClaim
-        if (command.equals("claim")) {
-            if (args.length > 1) {
-                String subCommand = args[1];
-                if (subCommand.equals("confirm") || subCommand.equals("adquirir") || subCommand.equals("ocupar")) {
-                    // Adia a verificação para garantir que o claim já foi processado pelo outro plugin
-                    // ATUALIZAÇÃO: Realiza duas tentativas espaçadas para garantir a atualização correta no Dynmap
-                    // (1) Primeira tentativa padrão (como era antes)
-                    Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-                        @Override
-                        public void run() {
-                            Claim claim = plugin.getBlockyClaim().getClaimManager().getClaimAt(player.getLocation());
-                            if (claim != null) {
-                                plugin.getDynmapManager().createOrUpdateClaimMarker(claim);
-                            }
-                        }
-                    }, 1L);
-
-                    // (2) Segunda tentativa, alguns ticks depois (garante que a facção do jogador foi processada)
-                    Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-                        @Override
-                        public void run() {
-                            List<Claim> claims = plugin.getBlockyClaim().getClaimManager().getClaimsByOwner(player.getName());
-                            for (Claim playerClaim : claims) {
-                                plugin.getDynmapManager().createOrUpdateClaimMarker(playerClaim);
-                            }
-                        }
-                    }, 10L);
+        // Sincronização nos comandos de claim
+        if (command.equals("claim") || command.equals("fac")) {
+            // Aguarda 5 ticks para garantir que o BlockyClaim já alterou/remoeu/adicionou claims
+            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
+                @Override
+                public void run() {
+                    plugin.syncAllClaims();
                 }
-            }
-        }
-        // Gatilhos do BlockyFactions
-        else if (command.equals("fac")) {
-            if (args.length > 1) {
-                String subCommand = args[1];
-                if (subCommand.equals("entrar") || subCommand.equals("criar")) {
-                    Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-                        @Override
-                        public void run() {
-                            updateAllPlayerClaims(player.getName());
-                        }
-                    }, 1L);
-                } else if (subCommand.equals("sair")) {
-                    Faction faction = plugin.getBlockyFactions().getFactionManager().getPlayerFaction(player.getName());
-                    if (faction == null) return;
-                    // A dissolução ocorre se o LÍDER sai e NÃO HÁ OFICIAIS para transferir a liderança.
-                    boolean isLeader = faction.getLeader().equalsIgnoreCase(player.getName());
-                    boolean noOfficialsToPromote = faction.getOfficials().isEmpty();
-                    final List<String> membersToUpdate = new ArrayList<>();
-                    if (isLeader && noOfficialsToPromote) {
-                        membersToUpdate.add(faction.getLeader());
-                        membersToUpdate.addAll(faction.getOfficials());
-                        membersToUpdate.addAll(faction.getMembers());
-                        if (faction.getTreasuryPlayer() != null && !faction.getTreasuryPlayer().isEmpty()) {
-                            membersToUpdate.add(faction.getTreasuryPlayer());
-                        }
-                    } else {
-                        membersToUpdate.add(player.getName());
-                    }
-                    Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
-                        @Override
-                        public void run() {
-                            for (String playerName : membersToUpdate) {
-                                updateAllPlayerClaims(playerName);
-                            }
-                        }
-                    }, 1L);
-                }
-            }
-        }
-    }
-
-    private void updateAllPlayerClaims(String playerName) {
-        List<Claim> playerClaims = plugin.getBlockyClaim().getClaimManager().getClaimsByOwner(playerName);
-        for (Claim claim : playerClaims) {
-            plugin.getDynmapManager().createOrUpdateClaimMarker(claim);
+            }, 5L);
         }
     }
 }
