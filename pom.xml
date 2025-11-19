@@ -9,7 +9,7 @@
     <packaging>jar</packaging>
 
     <name>BlockyDynmap</name>
-    <description>Integra BlockyClaim/BlockyFactions com Dynmap</description>
+    <description>Integra BlockyClaim/BlockyGroups com Dynmap</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -43,9 +43,9 @@
 
         <dependency>
             <groupId>com.blockycraft</groupId>
-            <artifactId>BlockyFactions</artifactId>
+            <artifactId>BlockyGroups</artifactId>
             <version>1.0</version> <scope>system</scope>
-            <systemPath>${minecraft.server.path}/plugins/BlockyFactions.jar</systemPath>
+            <systemPath>${minecraft.server.path}/plugins/BlockyGroups.jar</systemPath>
         </dependency>
     </dependencies>
 

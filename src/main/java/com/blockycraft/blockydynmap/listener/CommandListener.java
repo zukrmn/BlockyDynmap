@@ -7,7 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 /**
- * Listener para comandos relevantes do BlockyClaim e BlockyFactions,
+ * Listener para comandos relevantes do BlockyClaim e BlockyGroups,
  * realizando ressincronização completa do Dynmap sempre que possível alteração.
  */
 public class CommandListener implements Listener {
@@ -26,7 +26,7 @@ public class CommandListener implements Listener {
         String command = args[0].replace("/", "");
 
         // Sincronização nos comandos de claim
-        if (command.equals("claim") || command.equals("fac")) {
+        if (command.equals("claim") || command.equals("grp")) {
             // Aguarda 5 ticks para garantir que o BlockyClaim já alterou/remoeu/adicionou claims
             Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
                 @Override

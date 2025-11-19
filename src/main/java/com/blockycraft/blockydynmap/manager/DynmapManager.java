@@ -2,7 +2,7 @@ package com.blockycraft.blockydynmap.manager;
 
 import com.blockycraft.blockyclaim.data.Claim;
 import com.blockycraft.blockydynmap.BlockyDynmap;
-import com.blockycraft.blockyfactions.data.Faction;
+import com.blockycraft.blockygroups.data.Group;
 import org.dynmap.DynmapAPI;
 import org.dynmap.markers.AreaMarker;
 import org.dynmap.markers.MarkerAPI;
@@ -100,19 +100,19 @@ public class DynmapManager {
                 return;
             }
             String ownerName = claim.getOwnerName();
-            Faction ownerFaction = plugin.getBlockyFactions().getFactionManager().getPlayerFaction(ownerName);
+            Group ownerGroup = plugin.getBlockyGroups().getGroupManager().getPlayerGroup(ownerName);
             String color, label;
-            if (ownerFaction != null) {
-                color = ownerFaction.getColorHex();
-                label = "§f" + ownerFaction.getTag();
+            if (ownerGroup != null) {
+                color = ownerGroup.getColorHex();
+                label = "§f" + ownerGroup.getTag();
             } else {
                 color = DEFAULT_COLOR;
                 label = "§f" + ownerName;
             }
             StringBuilder description = new StringBuilder();
             description.append("<b>Dono:</b> ").append(ownerName);
-            if (ownerFaction != null) {
-                description.append("<br/><b>Facção:</b> ").append(ownerFaction.getName());
+            if (ownerGroup != null) {
+                description.append("<br/><b>Grupo:</b> ").append(ownerGroup.getName());
             }
             marker.setLabel(label, true);
             marker.setDescription(description.toString());

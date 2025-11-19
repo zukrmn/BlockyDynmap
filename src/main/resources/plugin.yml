@@ -2,6 +2,6 @@ name: BlockyDynmap
 main: com.blockycraft.blockydynmap.BlockyDynmap
 version: 1.0.0
 author: Bernardo Zukerman
-description: Integra BlockyClaim e BlockyFactions com o Dynmap.
+description: Integra BlockyClaim e BlockyGroups com o Dynmap.
 
-softdepend: [dynmap, BlockyClaim, BlockyFactions]
+softdepend: [dynmap, BlockyClaim, BlockyGroups]

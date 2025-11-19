@@ -2,7 +2,7 @@ package com.blockycraft.blockydynmap;
 
 import com.blockycraft.blockyclaim.BlockyClaim;
 import com.blockycraft.blockyclaim.managers.ClaimManager;
-import com.blockycraft.blockyfactions.BlockyFactions;
+import com.blockycraft.blockygroups.BlockyGroups;
 import com.blockycraft.blockydynmap.listener.CommandListener;
 import com.blockycraft.blockydynmap.manager.DynmapManager;
 import org.bukkit.plugin.Plugin;
@@ -12,7 +12,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class BlockyDynmap extends JavaPlugin {
     private DynmapManager dynmapManager;
     private BlockyClaim blockyClaim;
-    private BlockyFactions blockyFactions;
+    private BlockyGroups blockyGroups;
     private boolean initialized = false;
     private int checkTaskId = -1;
 
@@ -63,13 +63,13 @@ public class BlockyDynmap extends JavaPlugin {
             return false;
         }
         this.blockyClaim = (BlockyClaim) claimPlugin;
-        Plugin factionsPlugin = pm.getPlugin("BlockyFactions");
-        if (factionsPlugin == null || !(factionsPlugin instanceof BlockyFactions)) {
-            System.out.println("[BlockyDynmap] ERRO CRITICO: BlockyFactions nao encontrado.");
+        Plugin groupsPlugin = pm.getPlugin("BlockyGroups");
+        if (groupsPlugin == null || !(groupsPlugin instanceof BlockyGroups)) {
+            System.out.println("[BlockyDynmap] ERRO CRITICO: BlockyGroups nao encontrado.");
             getServer().getPluginManager().disablePlugin(this);
             return false;
         }
-        this.blockyFactions = (BlockyFactions) factionsPlugin;
+        this.blockyGroups = (BlockyGroups) groupsPlugin;
         return true;
     }
 
@@ -95,7 +95,7 @@ public class BlockyDynmap extends JavaPlugin {
     public BlockyClaim getBlockyClaim() {
         return blockyClaim;
     }
-    public BlockyFactions getBlockyFactions() {
-        return blockyFactions;
+    public BlockyGroups getBlockyGroups() {
+        return blockyGroups;
     }
 }
